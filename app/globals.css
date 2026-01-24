@@ -5,25 +5,25 @@
 @tailwind utilities;
 
 :root {
-  --background: 38 40% 97%;
-  --foreground: 222 47% 11%;
-  --muted: 40 24% 92%;
+  --background: 32 35% 97%;
+  --foreground: 223 32% 14%;
+  --muted: 30 22% 92%;
   --muted-foreground: 222 16% 38%;
-  --popover: 38 45% 99%;
-  --popover-foreground: 222 47% 11%;
+  --popover: 34 40% 99%;
+  --popover-foreground: 223 32% 14%;
   --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
-  --border: 38 20% 84%;
-  --input: 38 20% 84%;
-  --primary: 221 76% 46%;
+  --card-foreground: 223 32% 14%;
+  --border: 30 18% 86%;
+  --input: 30 18% 86%;
+  --primary: 221 78% 44%;
   --primary-foreground: 210 40% 99%;
-  --secondary: 215 55% 96%;
-  --secondary-foreground: 222 47% 14%;
-  --accent: 35 65% 90%;
-  --accent-foreground: 28 46% 18%;
+  --secondary: 215 45% 96%;
+  --secondary-foreground: 223 32% 16%;
+  --accent: 33 48% 90%;
+  --accent-foreground: 25 35% 20%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 210 40% 98%;
-  --ring: 221 76% 46%;
+  --ring: 221 78% 44%;
   --radius: 1rem;
 }
 
@@ -34,6 +34,28 @@ body {
 
 a {
   @apply text-primary underline-offset-4 hover:underline;
+}
+
+.hero-divider {
+  background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.35), hsl(var(--accent) / 0.7), transparent);
+}
+
+@layer base {
+  h1 {
+    @apply text-4xl font-semibold tracking-tight md:text-5xl;
+  }
+
+  h2 {
+    @apply text-2xl font-semibold tracking-tight md:text-[1.75rem];
+  }
+
+  h3 {
+    @apply text-xl font-semibold tracking-tight;
+  }
+
+  p {
+    @apply leading-relaxed;
+  }
 }
 
 .maplibregl-ctrl-attrib {

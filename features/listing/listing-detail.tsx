@@ -9,6 +9,7 @@ import {
   BedDouble,
   FileCheck2,
   Heart,
+  MessageSquare,
   MapPin,
   Scale,
   ShieldCheck,
@@ -28,11 +29,19 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { getListingById } from "@/lib/api/listings";
 import { convert, mockFxRates } from "@/lib/fx/mock-rates";
 import { usePreferencesStore } from "@/lib/stores/preferences-store";
+import { usePurchaseFlowStore } from "@/lib/stores/purchase-flow-store";
 import { useSavedStore } from "@/lib/stores/saved-store";
 import { formatArea, formatDualPrice, formatNumber } from "@/lib/utils/format";
+import type { OfferStub } from "@/src/domain/offer/offer.types";
+import { recordAuditEventStub } from "@/src/services/audit/audit.service";
+import { legalAiClientStub } from "@/src/services/legal-ai/legalAi.client";
+import { LEGAL_WORKFLOW_STEPS } from "@/src/workflows/legal/legalWorkflow.steps";
+import type { LegalWorkflowEventStub } from "@/src/workflows/legal/legalWorkflow.events";
+import { transitionLegalWorkflowStub } from "@/src/workflows/legal/legalWorkflow.machine";
 
 type ListingDetailProps = {
   id: string;
@@ -98,14 +107,34 @@ function legalFeeEstimate(price: number) {
 export function ListingDetail({ id }: ListingDetailProps) {
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
+  const [consultationSummary, setConsultationSummary] = useState<string | null>(null);
+  const [clarifyingQuestions, setClarifyingQuestions] = useState<string[]>([]);
+  const [workflowLoading, setWorkflowLoading] = useState(false);
 
   const { savedListingIds, hydrate: hydrateSaved, toggleListing } = useSavedStore();
   const { displayCurrency, showLocalCurrency, hydrate: hydratePreferences } = usePreferencesStore();
+  const {
+    selectedSupportMode,
+    setSupportMode,
+    workflowStage,
+    setWorkflowStage,
+    checklist: workflowChecklist,
+    setChecklist,
+    messages,
+    addMessage,
+    drawerOpen,
+    setDrawerOpen,
+    activeOffer,
+    setActiveOffer,
+    hydrate: hydratePurchaseFlow,
+    resetFlow
+  } = usePurchaseFlowStore();
 
   useEffect(() => {
     void hydrateSaved();
     hydratePreferences();
-  }, [hydratePreferences, hydrateSaved]);
+    hydratePurchaseFlow();
+  }, [hydratePreferences, hydratePurchaseFlow, hydrateSaved]);
 
   useEffect(() => {
     let active = true;
@@ -133,6 +162,94 @@ export function ListingDetail({ id }: ListingDetailProps) {
   const feeEstimate = listing ? legalFeeEstimate(listing.price.salePrice) : null;
 
   const checklist = useMemo(() => (listing ? checklistForCountry(listing.country) : []), [listing]);
+
+  const supportModes = [
+    {
+      id: "human",
+      label: "Human agent",
+      description: "Schedule viewings and negotiate with a dedicated agent."
+    },
+    {
+      id: "ai",
+      label: "AI agent (fast-track)",
+      description: "AI coordinator accelerates documents and legal steps."
+    }
+  ] as const;
+
+  const stepsIndex = LEGAL_WORKFLOW_STEPS.findIndex((step) => step.stage === workflowStage);
+
+  const createOffer = (): OfferStub | null => {
+    if (!listing) return null;
+    const offer: OfferStub = {
+      id: `offer-${listing.id}-${Date.now()}`,
+      propertyId: listing.id,
+      amountMinor: Math.round(listing.price.salePrice * 100),
+      currencyCode: listing.currency,
+      status: "created"
+    };
+    const caseId = `case-${listing.id}-${Date.now()}`;
+    setActiveOffer(offer, caseId);
+    setWorkflowStage("OfferCreated");
+    setChecklist(checklist);
+    addMessage({
+      id: `message-${Date.now()}`,
+      author: "system",
+      content: "Offer created. Legal workflow scaffold initialized.",
+      createdAt: new Date().toISOString()
+    });
+    void recordAuditEventStub({
+      id: `audit-${Date.now()}`,
+      type: "offer.created",
+      occurredAtIso: new Date().toISOString(),
+      metadata: { listingId: listing.id, offerId: offer.id }
+    });
+    return offer;
+  };
+
+  const advanceWorkflow = (targetStage: LegalWorkflowEventStub["targetStage"]) => {
+    const nextState = transitionLegalWorkflowStub(
+      { caseId: activeOffer?.id ?? "case", stage: workflowStage },
+      {
+        type: targetStage,
+        caseId: activeOffer?.id ?? "case",
+        targetStage
+      }
+    );
+    setWorkflowStage(nextState.stage);
+    void recordAuditEventStub({
+      id: `audit-${Date.now()}`,
+      type: "legal.workflow.transition",
+      occurredAtIso: new Date().toISOString(),
+      metadata: { stage: nextState.stage }
+    });
+  };
+
+  const handleOfferSubmit = () => {
+    createOffer();
+  };
+
+  const startAiWorkflow = async () => {
+    if (!listing) return;
+    const offer = activeOffer ?? createOffer();
+    setDrawerOpen(true);
+    setWorkflowLoading(true);
+    advanceWorkflow("AIConsultation");
+    const response = await legalAiClientStub.consult({
+      caseId: offer?.id ?? `case-${listing.id}`,
+      stage: "AIConsultation",
+      countryCode: listing.country,
+      contextSummary: `${listing.title} in ${listing.city}`
+    });
+    setConsultationSummary(response.readinessSummary);
+    setClarifyingQuestions(response.clarifyingQuestions);
+    addMessage({
+      id: `message-${Date.now()}`,
+      author: "ai",
+      content: response.readinessSummary,
+      createdAt: new Date().toISOString()
+    });
+    setWorkflowLoading(false);
+  };
 
   if (loading) {
     return (
@@ -293,55 +410,90 @@ export function ListingDetail({ id }: ListingDetailProps) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" />
-                Buyer actions
+                Make an offer
               </CardTitle>
-              <CardDescription>Move from interest to intent with guided next steps.</CardDescription>
+              <CardDescription>Move from interest to intent with structured support options.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-4">
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button className="w-full">Make an offer</Button>
+                  <Button className="w-full">Submit offer</Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Make an offer</DialogTitle>
+                    <DialogTitle>Submit offer</DialogTitle>
                     <DialogDescription>
-                      Offer flows are stubbed for now. In a full version, this is where you would set price, contingencies, and timelines.
+                      Offers are mocked. Submit to create a legal workflow case and unlock AI legal coordination.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="rounded-xl border border-border/60 bg-muted/40 p-4 text-sm text-muted-foreground">
-                    Suggested opening offer: aim for clarity on price, included fixtures, and legal pack timing.
+                    Suggested opening offer: align on price, included fixtures, and timing for the legal pack.
                   </div>
                   <DialogFooter>
                     <Button variant="outline">Close</Button>
-                    <Button>Start offer</Button>
+                    <Button onClick={handleOfferSubmit}>Submit offer</Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
 
-              <Dialog>
-                <DialogTrigger asChild>
+              <div className="space-y-3">
+                <p className="text-sm font-semibold">Choose support</p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {supportModes.map((mode) => (
+                    <button
+                      key={mode.id}
+                      type="button"
+                      onClick={() => setSupportMode(mode.id)}
+                      className={`rounded-xl border px-3 py-2 text-left text-sm transition-colors ${
+                        selectedSupportMode === mode.id ? "border-primary/50 bg-primary/5 text-foreground" : "border-border/70 text-muted-foreground hover:border-primary/40"
+                      }`}
+                    >
+                      <p className="font-medium text-foreground">{mode.label}</p>
+                      <p className="text-xs text-muted-foreground">{mode.description}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {selectedSupportMode === "human" ? (
+                <div className="space-y-2">
                   <Button variant="outline" className="w-full gap-2">
                     <FileCheck2 className="h-4 w-4" />
-                    Request legal pack
+                    Schedule viewing
                   </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Request legal pack</DialogTitle>
-                    <DialogDescription>
-                      Legal pack delivery is mocked. This scaffold highlights the product differentiator: clarity before commitment.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="rounded-xl border border-border/60 bg-muted/40 p-4 text-sm text-muted-foreground">
-                    Typical documents: proof of ownership, title documents, planning permissions, and recent tax receipts.
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline">Close</Button>
-                    <Button>Request pack</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="w-full gap-2">
+                        <MessageSquare className="h-4 w-4" />
+                        Message agent
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Message the listing agent</DialogTitle>
+                        <DialogDescription>Send a quick note to coordinate viewings or ask questions.</DialogDescription>
+                      </DialogHeader>
+                      <div className="rounded-xl border border-border/60 bg-muted/40 p-4 text-sm text-muted-foreground">
+                        Messaging is mocked for now. We’ll route this to a local agent marketplace later.
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline">Close</Button>
+                        <Button>Send message</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Button className="w-full gap-2" onClick={() => void startAiWorkflow()} disabled={workflowLoading}>
+                    <Sparkles className="h-4 w-4" />
+                    {workflowLoading ? "Launching AI workflow…" : "Start AI Purchase Workflow"}
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    AI coordinator clarifies objectives, requests documents, and tracks the legal timeline.
+                  </p>
+                </div>
+              )}
 
               <p className="text-xs text-muted-foreground">Next: align on offer terms, then request the legal pack early.</p>
             </CardContent>
@@ -387,6 +539,121 @@ export function ListingDetail({ id }: ListingDetailProps) {
           </Card>
         </div>
       </section>
+
+      <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <SheetContent side="right" className="flex flex-col gap-6 overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>AI Purchase Workflow</SheetTitle>
+            <SheetDescription>Offer → AI Consult → Legal Pack → Due Diligence → Contracts → Completion</SheetDescription>
+          </SheetHeader>
+
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-border/70 bg-muted/40 p-4">
+              <p className="text-sm font-semibold text-foreground">Workflow progress</p>
+              <div className="mt-3 space-y-3">
+                {LEGAL_WORKFLOW_STEPS.map((step, index) => {
+                  const complete = index < stepsIndex;
+                  const active = index === stepsIndex;
+                  return (
+                    <div key={step.stage} className="flex items-start gap-3 text-sm">
+                      <div
+                        className={`mt-0.5 flex h-6 w-6 items-center justify-center rounded-full border text-xs font-semibold ${
+                          complete ? "border-primary bg-primary text-primary-foreground" : active ? "border-primary text-primary" : "border-border"
+                        }`}
+                      >
+                        {complete ? "✓" : index + 1}
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">{step.stage}</p>
+                        <p className="text-xs text-muted-foreground">{step.description}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <Card className="border-primary/20 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-base">AI Legal Solicitor</CardTitle>
+                <CardDescription>Mocked coordination with human oversight.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 text-sm text-muted-foreground">
+                <div className="space-y-2">
+                  <p className="font-semibold text-foreground">Document requests</p>
+                  <ul className="space-y-1">
+                    <li>• Proof of funds (recent statement or bank letter)</li>
+                    <li>• Buyer identity verification</li>
+                    <li>• Draft contract and title documents</li>
+                  </ul>
+                </div>
+                <div className="space-y-2">
+                  <p className="font-semibold text-foreground">Key legal risks (mock)</p>
+                  <ul className="space-y-1">
+                    <li>• Confirm ownership rights for foreign buyers.</li>
+                    <li>• Review any zoning or leasehold limitations.</li>
+                    <li>• Validate title history and outstanding liens.</li>
+                  </ul>
+                </div>
+                <div className="space-y-2">
+                  <p className="font-semibold text-foreground">Country checklist</p>
+                  <ul className="space-y-1">
+                    {workflowChecklist.map((item) => (
+                      <li key={item}>• {item}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="space-y-2">
+                  <p className="font-semibold text-foreground">AI summary</p>
+                  <p>{consultationSummary ?? "Run the AI consultation to populate a readiness summary."}</p>
+                </div>
+                {clarifyingQuestions.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="font-semibold text-foreground">Clarifying questions</p>
+                    <ul className="space-y-1">
+                      {clarifyingQuestions.map((question) => (
+                        <li key={question}>• {question}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Button variant="outline" onClick={() => advanceWorkflow("LegalPackRequested")}>
+                Request legal pack
+              </Button>
+              <Button variant="outline" onClick={() => addMessage({ id: `message-${Date.now()}`, author: "buyer", content: "Proof of funds uploaded (mock).", createdAt: new Date().toISOString() })}>
+                Upload proof of funds
+              </Button>
+              <Button variant="outline" onClick={() => addMessage({ id: `message-${Date.now()}`, author: "ai", content: "Buyer summary generated with objectives, timeline, and financing overview.", createdAt: new Date().toISOString() })}>
+                Generate buyer summary
+              </Button>
+              <Button variant="secondary" onClick={resetFlow}>
+                Reset workflow
+              </Button>
+            </div>
+
+            {messages.length > 0 && (
+              <div className="rounded-2xl border border-border/70 bg-muted/40 p-4">
+                <p className="text-sm font-semibold text-foreground">Workflow log</p>
+                <ul className="mt-2 space-y-2 text-xs text-muted-foreground">
+                  {messages.map((message) => (
+                    <li key={message.id}>
+                      <span className="font-semibold text-foreground">{message.author.toUpperCase()}</span> — {message.content}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          <SheetClose asChild>
+            <Button variant="outline">Close</Button>
+          </SheetClose>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

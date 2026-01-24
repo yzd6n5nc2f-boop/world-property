@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowRight, FileCheck2, Globe2, Scale, ShieldCheck } from "lucide-react";
+import { ArrowRight, FileCheck2, Globe2, Scale, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -95,6 +95,38 @@ export default function LegalRoute() {
           </Button>
         </div>
       </header>
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        <Card className="border-border/70">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Users className="h-5 w-5 text-primary" />
+              Human agent route
+            </CardTitle>
+            <CardDescription>Traditional appointments and local expertise.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <p>• Schedule viewings, negotiate offer terms, and coordinate with a dedicated agent.</p>
+            <p>• Best for buyers who want hands-on local guidance and in-person walkthroughs.</p>
+          </CardContent>
+        </Card>
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Sparkles className="h-5 w-5 text-primary" />
+              AI fast-track route
+            </CardTitle>
+            <CardDescription>Workflow-led coordination for speed and clarity.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <p>• AI coordinator gathers objectives, requests documents, and keeps you on a unified checklist.</p>
+            <p>• Best for investors who want structured progress without waiting on back-and-forth.</p>
+            <p className="text-xs text-muted-foreground">
+              AI assists coordination only; solicitors and partners review and approve before completion.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
 
       <section className="grid gap-4 lg:grid-cols-4">
         {journeySteps.map((step) => (

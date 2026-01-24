@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircle2, Home, MapPinned, Sparkles, UploadCloud } from "lucide-react";
+import { Camera, CheckCircle2, Home, MapPinned, Sparkles, UploadCloud } from "lucide-react";
 import { useForm } from "react-hook-form";
 import type { Listing } from "@/types/listing";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { createListing } from "@/lib/api/listings";
 import { hostListingSchema, type HostListingFormValues } from "@/lib/schemas/host";
 import { propertyTypeSchema } from "@/lib/schemas/listing";
 import { formatCurrency } from "@/lib/utils/format";
+import { imageAiClientStub } from "@/src/services/image-ai/imageAi.client";
 
 const propertyTypes = propertyTypeSchema.options;
 
@@ -76,6 +77,15 @@ export function CreateListingWizard() {
   const [step, setStep] = useState(0);
   const [published, setPublished] = useState<Listing | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [photoGallery, setPhotoGallery] = useState(
+    defaultValues.images.map((url, index) => ({
+      id: `seed-${index}`,
+      url,
+      enhancedUrl: "",
+      status: "ready" as "ready" | "enhancing" | "enhanced"
+    }))
+  );
+  const [enhancing, setEnhancing] = useState(false);
 
   const form = useForm<HostListingFormValues>({
     resolver: zodResolver(hostListingSchema),
@@ -89,6 +99,11 @@ export function CreateListingWizard() {
     if (values.salePrice) return formatCurrency(values.salePrice, values.currency);
     return "Add pricing";
   }, [values.currency, values.salePrice]);
+
+  useEffect(() => {
+    const nextImages = photoGallery.map((photo) => photo.enhancedUrl || photo.url);
+    form.setValue("images", nextImages, { shouldValidate: true });
+  }, [form, photoGallery]);
 
   const goNext = async () => {
     const fieldsByStep: Record<number, Array<keyof HostListingFormValues>> = {
@@ -116,6 +131,59 @@ export function CreateListingWizard() {
     setStep(steps.length - 1);
   });
 
+  const handleCapture = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? []);
+    if (!files.length) return;
+    const next = files.map((file, index) => ({
+      id: `${file.name}-${Date.now()}-${index}`,
+      url: URL.createObjectURL(file),
+      enhancedUrl: "",
+      status: "ready" as const
+    }));
+    setPhotoGallery((prev) => [...prev, ...next]);
+    event.target.value = "";
+  };
+
+  const enhancePhotos = async () => {
+    if (!photoGallery.length) return;
+    setEnhancing(true);
+    setPhotoGallery((prev) => prev.map((photo) => ({ ...photo, status: "enhancing" })));
+    const enhanced = await Promise.all(
+      photoGallery.map((photo) =>
+        imageAiClientStub.enhance({
+          imageUrl: photo.url,
+          profile: "clarity"
+        })
+      )
+    );
+    setPhotoGallery((prev) =>
+      prev.map((photo, index) => ({
+        ...photo,
+        enhancedUrl: enhanced[index]?.enhancedUrl ?? photo.enhancedUrl,
+        status: "enhanced"
+      }))
+    );
+    setEnhancing(false);
+  };
+
+  const downloadPack = (listing: Listing) => {
+    const payload = {
+      id: listing.id,
+      title: listing.title,
+      location: `${listing.city}, ${listing.country}`,
+      price: listing.price.salePrice,
+      currency: listing.currency,
+      createdAt: listing.createdAt
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `investor-pack-${listing.id}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (published) {
     return (
       <Card className="border-primary/30 shadow-soft">
@@ -139,11 +207,25 @@ export function CreateListingWizard() {
             <Button asChild>
               <a href={`/listing/${published.id}`}>View listing</a>
             </Button>
+            <Button asChild variant="outline">
+              <a href={`/pack/${published.id}`}>Generate investor pack</a>
+            </Button>
+            <Button variant="secondary" onClick={() => downloadPack(published)}>
+              Download pack JSON
+            </Button>
             <Button
               variant="outline"
               onClick={() => {
                 setPublished(null);
                 form.reset(defaultValues);
+                setPhotoGallery(
+                  defaultValues.images.map((url, index) => ({
+                    id: `seed-${index}`,
+                    url,
+                    enhancedUrl: "",
+                    status: "ready" as const
+                  }))
+                );
                 setStep(0);
               }}
             >
@@ -353,25 +435,39 @@ export function CreateListingWizard() {
           <Card>
             <CardHeader>
               <CardTitle>Photos</CardTitle>
-              <CardDescription>Use direct image URLs for this MVP.</CardDescription>
+              <CardDescription>Capture, preview, and enhance photos with a mocked AI pipeline.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <Label htmlFor="images">Image URLs (one per line)</Label>
-              <Textarea
-                id="images"
-                rows={6}
-                value={values.images.join("\n")}
-                onChange={(event) =>
-                  form.setValue(
-                    "images",
-                    event.target.value
-                      .split("\n")
-                      .map((entry) => entry.trim())
-                      .filter(Boolean),
-                    { shouldValidate: true }
-                  )
-                }
-              />
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="photo-capture">Capture photos (mobile-friendly)</Label>
+                <Input id="photo-capture" type="file" accept="image/*" capture="environment" multiple onChange={handleCapture} />
+                <p className="text-xs text-muted-foreground">
+                  Use your phone camera for quick captures or upload existing images for enhancement.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button type="button" variant="outline" className="gap-2" onClick={enhancePhotos} disabled={enhancing || !photoGallery.length}>
+                  <Sparkles className="h-4 w-4" />
+                  {enhancing ? "Enhancing…" : "Enhance with AI"}
+                </Button>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Camera className="h-4 w-4" />
+                  AI enhancement is mocked and swaps in premium placeholders.
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {photoGallery.map((photo) => (
+                  <div key={photo.id} className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm">
+                    <img src={photo.enhancedUrl || photo.url} alt="Listing preview" className="h-40 w-full object-cover" />
+                    <div className="flex items-center justify-between px-3 py-2 text-xs text-muted-foreground">
+                      <span>{photo.enhancedUrl ? "Enhanced" : "Original"}</span>
+                      <span className="text-primary">
+                        {photo.status === "enhancing" ? "Processing" : photo.status === "enhanced" ? "AI Ready" : "Ready"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
               <p className="text-xs text-destructive">{form.formState.errors.images?.message}</p>
             </CardContent>
           </Card>
