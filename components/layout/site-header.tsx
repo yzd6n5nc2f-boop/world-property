@@ -1,0 +1,108 @@
+"use client";
+
+import Link from "next/link";
+import type { Route } from "next";
+import { useEffect } from "react";
+import { Globe2, Heart, Menu, UserCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
+import { useAuthStore } from "@/lib/stores/auth-store";
+import { cn } from "@/lib/utils/cn";
+
+const navLinks: Array<{ href: Route; label: string }> = [
+  { href: "/search?mode=buy" as Route, label: "Buy / Rent" },
+  { href: "/search?mode=stay" as Route, label: "Stay" },
+  { href: "/host", label: "Host / Agent" },
+  { href: "/saved", label: "Saved" }
+];
+
+function NavItems({ className, onNavigate }: { className?: string; onNavigate?: () => void }) {
+  return (
+    <nav className={cn("flex items-center gap-1", className)}>
+      {navLinks.map((link) => (
+        <Button key={link.href} asChild variant="ghost" size="sm" onClick={onNavigate}>
+          <Link href={link.href}>{link.label}</Link>
+        </Button>
+      ))}
+    </nav>
+  );
+}
+
+export function SiteHeader() {
+  const { user, hydrate, signOut } = useAuthStore();
+
+  useEffect(() => {
+    void hydrate();
+  }, [hydrate]);
+
+  return (
+    <header className="sticky top-0 z-30 border-b border-border/60 bg-background/90 backdrop-blur">
+      <div className="container flex h-16 items-center justify-between">
+        <Link href="/" className="flex items-center gap-2 text-base font-semibold no-underline">
+          <Globe2 className="h-5 w-5 text-primary" />
+          World Property
+        </Link>
+
+        <div className="hidden items-center gap-2 md:flex">
+          <NavItems />
+          <Separator orientation="vertical" className="mx-2 h-6" />
+          {user ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">{user.name}</span>
+              <Button variant="outline" size="sm" onClick={() => void signOut()}>
+                Sign out
+              </Button>
+            </div>
+          ) : (
+            <Button asChild size="sm">
+              <Link href="/auth">Sign in</Link>
+            </Button>
+          )}
+        </div>
+
+        <div className="md:hidden">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" aria-label="Open menu">
+                <Menu className="h-4 w-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="flex flex-col gap-6">
+              <SheetHeader>
+                <SheetTitle className="flex items-center gap-2">
+                  <Globe2 className="h-5 w-5 text-primary" />
+                  World Property
+                </SheetTitle>
+                <SheetDescription>Live, invest, or stay anywhere.</SheetDescription>
+              </SheetHeader>
+              <NavItems className="flex-col items-start" />
+              <Separator />
+              <div className="flex flex-col gap-2">
+                <Button asChild variant="secondary" className="justify-start gap-2">
+                  <Link href="/saved">
+                    <Heart className="h-4 w-4" />
+                    Saved
+                  </Link>
+                </Button>
+                {user ? (
+                  <Button variant="outline" className="justify-start gap-2" onClick={() => void signOut()}>
+                    <UserCircle2 className="h-4 w-4" />
+                    Sign out
+                  </Button>
+                ) : (
+                  <Button asChild className="justify-start gap-2">
+                    <Link href="/auth">
+                      <UserCircle2 className="h-4 w-4" />
+                      Sign in
+                    </Link>
+                  </Button>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      </div>
+    </header>
+  );
+}

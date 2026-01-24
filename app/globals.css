@@ -1,0 +1,53 @@
+@import "maplibre-gl/dist/maplibre-gl.css";
+@import "react-day-picker/dist/style.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 210 20% 98%;
+  --foreground: 222 47% 11%;
+  --muted: 210 16% 94%;
+  --muted-foreground: 215 16% 47%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --border: 214 18% 86%;
+  --input: 214 18% 86%;
+  --primary: 222 89% 56%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222 47% 11%;
+  --accent: 217 92% 92%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 40% 98%;
+  --ring: 222 89% 56%;
+  --radius: 0.9rem;
+}
+
+body {
+  @apply bg-background text-foreground antialiased;
+  min-height: 100vh;
+}
+
+a {
+  @apply text-primary underline-offset-4 hover:underline;
+}
+
+.maplibregl-ctrl-attrib {
+  font-size: 11px;
+}
+
+.rdp {
+  --rdp-cell-size: 36px;
+  --rdp-accent-color: hsl(var(--primary));
+  --rdp-background-color: hsl(var(--accent));
+  margin: 1rem;
+}
+
+.rdp-caption_label {
+  font-weight: 600;
+}
