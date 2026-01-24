@@ -1,0 +1,43 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/images/*.{png,jpg,gif,webp}", "/assets/*", "/*.css", "/*.js", "/*.ico", "/*.svg"]
+  },
+  "routes": [
+    {
+      "route": "/search*",
+      "rewrite": "/search/index.html"
+    },
+    {
+      "route": "/host",
+      "rewrite": "/host/index.html"
+    },
+    {
+      "route": "/saved",
+      "rewrite": "/saved/index.html"
+    },
+    {
+      "route": "/auth",
+      "rewrite": "/auth/index.html"
+    },
+    {
+      "route": "/about",
+      "rewrite": "/about/index.html"
+    },
+    {
+      "route": "/legal",
+      "rewrite": "/legal/index.html"
+    }
+  ],
+  "responseOverrides": {
+    "404": {
+      "rewrite": "/index.html",
+      "statusCode": 200
+    }
+  },
+  "globalHeaders": {
+    "X-Frame-Options": "DENY",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "strict-origin-when-cross-origin"
+  }
+}
