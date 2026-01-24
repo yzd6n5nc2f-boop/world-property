@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircle2, Home, Landmark, MapPinned, Sparkles, UploadCloud } from "lucide-react";
+import { CheckCircle2, Home, MapPinned, Sparkles, UploadCloud } from "lucide-react";
 import { useForm } from "react-hook-form";
 import type { Listing } from "@/types/listing";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ import { formatCurrency } from "@/lib/utils/format";
 const propertyTypes = propertyTypeSchema.options;
 
 const steps = [
-  { id: 0, title: "Mode", icon: Landmark },
+  { id: 0, title: "Basics", icon: Home },
   { id: 1, title: "Location", icon: MapPinned },
   { id: 2, title: "Details", icon: Home },
   { id: 3, title: "Pricing", icon: Sparkles },
@@ -29,7 +29,6 @@ const steps = [
 ] as const;
 
 const defaultValues: HostListingFormValues = {
-  mode: "buy",
   hostType: "agent",
   title: "",
   description: "",
@@ -42,27 +41,17 @@ const defaultValues: HostListingFormValues = {
   baths: 1,
   areaSqm: 80,
   propertyType: "apartment",
-  salePrice: undefined,
-  rentPerMonth: undefined,
-  nightRate: undefined,
+  salePrice: 350000,
   currency: "GBP",
   amenities: ["Wi-Fi"],
   images: ["https://picsum.photos/seed/new-listing-0/1200/800"]
 };
 
 function buildListing(values: HostListingFormValues): Listing {
-  const price =
-    values.mode === "buy"
-      ? { salePrice: values.salePrice }
-      : values.mode === "rent"
-        ? { rentPerMonth: values.rentPerMonth }
-        : { nightRate: values.nightRate };
-
-  const slugSource = `${values.city}-${values.mode}-${values.title}`.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  const slugSource = `${values.city}-${values.title}`.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
   return {
     id: `${slugSource}-${Date.now()}`,
-    mode: values.mode,
     title: values.title,
     description: values.description,
     country: values.country,
@@ -70,7 +59,7 @@ function buildListing(values: HostListingFormValues): Listing {
     address: values.address,
     lat: values.lat,
     lng: values.lng,
-    price,
+    price: { salePrice: values.salePrice },
     currency: values.currency,
     beds: values.beds,
     baths: values.baths,
@@ -95,21 +84,18 @@ export function CreateListingWizard() {
   });
 
   const values = form.watch();
-  const modeLabel = values.mode === "stay" ? "Stay" : values.mode === "rent" ? "Rent" : "Buy";
 
   const pricePreview = useMemo(() => {
-    if (values.mode === "buy" && values.salePrice) return formatCurrency(values.salePrice, values.currency);
-    if (values.mode === "rent" && values.rentPerMonth) return `${formatCurrency(values.rentPerMonth, values.currency)} / month`;
-    if (values.mode === "stay" && values.nightRate) return `${formatCurrency(values.nightRate, values.currency)} / night`;
+    if (values.salePrice) return formatCurrency(values.salePrice, values.currency);
     return "Add pricing";
-  }, [values.currency, values.mode, values.nightRate, values.rentPerMonth, values.salePrice]);
+  }, [values.currency, values.salePrice]);
 
   const goNext = async () => {
     const fieldsByStep: Record<number, Array<keyof HostListingFormValues>> = {
-      0: ["mode", "hostType", "title", "description"],
+      0: ["hostType", "title", "description", "currency"],
       1: ["country", "city", "address", "lat", "lng"],
       2: ["beds", "baths", "areaSqm", "propertyType", "amenities"],
-      3: ["currency", "salePrice", "rentPerMonth", "nightRate"],
+      3: ["salePrice"],
       4: ["images"],
       5: []
     };
@@ -138,11 +124,11 @@ export function CreateListingWizard() {
             <CheckCircle2 className="h-5 w-5" />
             Listing published
           </CardTitle>
-          <CardDescription>Your listing is now available in search results on this device.</CardDescription>
+          <CardDescription>Your listing is now available in buyer search results on this device.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="rounded-2xl border border-border/60 bg-muted/40 p-4">
-            <p className="text-sm text-muted-foreground">{modeLabel} listing</p>
+            <p className="text-sm text-muted-foreground">Buy listing</p>
             <p className="text-lg font-semibold">{published.title}</p>
             <p className="text-sm text-muted-foreground">
               {published.city}, {published.country}
@@ -174,7 +160,7 @@ export function CreateListingWizard() {
       <Card className="h-fit">
         <CardHeader>
           <CardTitle>Listing builder</CardTitle>
-          <CardDescription>Complete each step to publish locally.</CardDescription>
+          <CardDescription>Publish a buyer-ready listing with clear legal signals.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
           {steps.map((item) => {
@@ -203,31 +189,16 @@ export function CreateListingWizard() {
         {step === 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>Choose your mode</CardTitle>
-              <CardDescription>Decide whether this is a buy, rent, or stay listing.</CardDescription>
+              <CardTitle>Buyer basics</CardTitle>
+              <CardDescription>Frame the listing for serious buyers and their advisors.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-3 md:grid-cols-3">
-                {["buy", "rent", "stay"].map((mode) => (
-                  <button
-                    key={mode}
-                    type="button"
-                    onClick={() => form.setValue("mode", mode as HostListingFormValues["mode"], { shouldValidate: true })}
-                    className={`rounded-2xl border p-4 text-left transition-all ${
-                      values.mode === mode ? "border-primary/60 bg-primary/5 shadow-sm" : "border-border/70 hover:border-primary/40"
-                    }`}
-                  >
-                    <p className="text-sm font-semibold capitalize">{mode}</p>
-                    <p className="text-xs text-muted-foreground">{mode === "stay" ? "Short stay" : "Longer term"}</p>
-                  </button>
-                ))}
-              </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="host-type">Host type</Label>
+                  <Label htmlFor="host-type">Seller type</Label>
                   <Select value={values.hostType} onValueChange={(value) => form.setValue("hostType", value as HostListingFormValues["hostType"], { shouldValidate: true })}>
                     <SelectTrigger id="host-type">
-                      <SelectValue placeholder="Select host type" />
+                      <SelectValue placeholder="Select seller type" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="agent">Agent</SelectItem>
@@ -237,7 +208,7 @@ export function CreateListingWizard() {
                   <p className="text-xs text-destructive">{form.formState.errors.hostType?.message}</p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="currency">Currency</Label>
+                  <Label htmlFor="currency">Listing currency</Label>
                   <Input
                     id="currency"
                     maxLength={3}
@@ -249,12 +220,12 @@ export function CreateListingWizard() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="title">Title</Label>
-                <Input id="title" placeholder="Modern loft near the river" {...form.register("title")} />
+                <Input id="title" placeholder="Renovated apartment with legal pack ready" {...form.register("title")} />
                 <p className="text-xs text-destructive">{form.formState.errors.title?.message}</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
-                <Textarea id="description" placeholder="Share the highlights, vibe, and nearby gems." {...form.register("description")} />
+                <Textarea id="description" placeholder="Highlight documentation readiness, condition, and key buyer details." {...form.register("description")} />
                 <p className="text-xs text-destructive">{form.formState.errors.description?.message}</p>
               </div>
             </CardContent>
@@ -264,26 +235,26 @@ export function CreateListingWizard() {
         {step === 1 && (
           <Card>
             <CardHeader>
-              <CardTitle>Pin the location</CardTitle>
-              <CardDescription>Click the map or drag the marker to adjust the pin.</CardDescription>
+              <CardTitle>Location</CardTitle>
+              <CardDescription>Pin the exact location buyers and solicitors will reference.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
                   <Label htmlFor="country">Country</Label>
-                  <Input id="country" placeholder="Portugal" {...form.register("country")} />
+                  <Input id="country" placeholder="United Kingdom" {...form.register("country")} />
                   <p className="text-xs text-destructive">{form.formState.errors.country?.message}</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="city">City</Label>
-                  <Input id="city" placeholder="Lisbon" {...form.register("city")} />
+                  <Input id="city" placeholder="London" {...form.register("city")} />
                   <p className="text-xs text-destructive">{form.formState.errors.city?.message}</p>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
-                <Input id="address" placeholder="12 Riverfront Avenue" {...form.register("address")} />
-                <p className="text-xs text-destructive">{form.formState.errors.address?.message}</p>
+                <div className="space-y-2">
+                  <Label htmlFor="address">Address</Label>
+                  <Input id="address" placeholder="12 Riverbank Lane" {...form.register("address")} />
+                  <p className="text-xs text-destructive">{form.formState.errors.address?.message}</p>
+                </div>
               </div>
               <PinMap
                 lat={values.lat}
@@ -293,16 +264,6 @@ export function CreateListingWizard() {
                   form.setValue("lng", lng, { shouldValidate: true });
                 }}
               />
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="lat">Latitude</Label>
-                  <Input id="lat" inputMode="decimal" value={values.lat} onChange={(event) => form.setValue("lat", Number(event.target.value), { shouldValidate: true })} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lng">Longitude</Label>
-                  <Input id="lng" inputMode="decimal" value={values.lng} onChange={(event) => form.setValue("lng", Number(event.target.value), { shouldValidate: true })} />
-                </div>
-              </div>
             </CardContent>
           </Card>
         )}
@@ -310,30 +271,30 @@ export function CreateListingWizard() {
         {step === 2 && (
           <Card>
             <CardHeader>
-              <CardTitle>Property details</CardTitle>
-              <CardDescription>Capture the essentials guests and buyers care about.</CardDescription>
+              <CardTitle>Details</CardTitle>
+              <CardDescription>Provide the facts buyers compare first.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="beds">Beds</Label>
+                <Label htmlFor="beds">Bedrooms</Label>
                 <Input id="beds" type="number" min={0} {...form.register("beds", { valueAsNumber: true })} />
                 <p className="text-xs text-destructive">{form.formState.errors.beds?.message}</p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="baths">Baths</Label>
+                <Label htmlFor="baths">Bathrooms</Label>
                 <Input id="baths" type="number" min={0} {...form.register("baths", { valueAsNumber: true })} />
                 <p className="text-xs text-destructive">{form.formState.errors.baths?.message}</p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="area">Area (sqm)</Label>
-                <Input id="area" type="number" min={10} {...form.register("areaSqm", { valueAsNumber: true })} />
+                <Label htmlFor="areaSqm">Area (sqm)</Label>
+                <Input id="areaSqm" type="number" min={1} {...form.register("areaSqm", { valueAsNumber: true })} />
                 <p className="text-xs text-destructive">{form.formState.errors.areaSqm?.message}</p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="propertyType">Property type</Label>
+                <Label>Property type</Label>
                 <Select value={values.propertyType} onValueChange={(value) => form.setValue("propertyType", value as HostListingFormValues["propertyType"], { shouldValidate: true })}>
-                  <SelectTrigger id="propertyType">
-                    <SelectValue placeholder="Select type" />
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select property type" />
                   </SelectTrigger>
                   <SelectContent>
                     {propertyTypes.map((type) => (
@@ -361,7 +322,7 @@ export function CreateListingWizard() {
                     )
                   }
                 />
-                <p className="text-xs text-destructive">{form.formState.errors.amenities?.message as string | undefined}</p>
+                <p className="text-xs text-destructive">{form.formState.errors.amenities?.message}</p>
               </div>
             </CardContent>
           </Card>
@@ -371,33 +332,18 @@ export function CreateListingWizard() {
           <Card>
             <CardHeader>
               <CardTitle>Pricing</CardTitle>
-              <CardDescription>Set the headline price for this listing.</CardDescription>
+              <CardDescription>Set a clear sale price. Buyers will see conversions automatically.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {values.mode === "buy" && (
-                <div className="space-y-2">
-                  <Label htmlFor="salePrice">Sale price</Label>
-                  <Input id="salePrice" type="number" min={50000} {...form.register("salePrice", { valueAsNumber: true })} />
-                  <p className="text-xs text-destructive">{form.formState.errors.salePrice?.message}</p>
-                </div>
-              )}
-              {values.mode === "rent" && (
-                <div className="space-y-2">
-                  <Label htmlFor="rentPerMonth">Monthly rent</Label>
-                  <Input id="rentPerMonth" type="number" min={400} {...form.register("rentPerMonth", { valueAsNumber: true })} />
-                  <p className="text-xs text-destructive">{form.formState.errors.rentPerMonth?.message}</p>
-                </div>
-              )}
-              {values.mode === "stay" && (
-                <div className="space-y-2">
-                  <Label htmlFor="nightRate">Nightly rate</Label>
-                  <Input id="nightRate" type="number" min={40} {...form.register("nightRate", { valueAsNumber: true })} />
-                  <p className="text-xs text-destructive">{form.formState.errors.nightRate?.message}</p>
-                </div>
-              )}
-              <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 text-sm">
-                <p className="text-muted-foreground">Price preview</p>
-                <p className="text-lg font-semibold text-primary">{pricePreview}</p>
+              <div className="space-y-2">
+                <Label htmlFor="salePrice">Sale price</Label>
+                <Input id="salePrice" type="number" min={1} {...form.register("salePrice", { valueAsNumber: true })} />
+                <p className="text-xs text-destructive">{form.formState.errors.salePrice?.message}</p>
+              </div>
+              <div className="rounded-2xl border border-border/60 bg-muted/40 p-4">
+                <p className="text-sm text-muted-foreground">Price preview</p>
+                <p className="text-xl font-semibold text-primary">{pricePreview}</p>
+                <p className="text-xs text-muted-foreground">Conversions are shown to buyers based on their display currency preference.</p>
               </div>
             </CardContent>
           </Card>
@@ -407,63 +353,43 @@ export function CreateListingWizard() {
           <Card>
             <CardHeader>
               <CardTitle>Photos</CardTitle>
-              <CardDescription>Provide image URLs for your listing gallery.</CardDescription>
+              <CardDescription>Use direct image URLs for this MVP.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {values.images.map((image, index) => (
-                <div key={index} className="space-y-1">
-                  <Label htmlFor={`image-${index}`}>Photo {index + 1}</Label>
-                  <Input
-                    id={`image-${index}`}
-                    value={image}
-                    onChange={(event) => {
-                      const next = [...values.images];
-                      next[index] = event.target.value;
-                      form.setValue("images", next, { shouldValidate: true });
-                    }}
-                  />
-                </div>
-              ))}
-              <div className="flex gap-2">
-                <Button type="button" variant="outline" onClick={() => form.setValue("images", [...values.images, ""], { shouldValidate: true })}>
-                  Add photo
-                </Button>
-                {values.images.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => form.setValue("images", values.images.slice(0, -1), { shouldValidate: true })}
-                  >
-                    Remove last
-                  </Button>
-                )}
-              </div>
-              <p className="text-xs text-destructive">{form.formState.errors.images?.message as string | undefined}</p>
+            <CardContent className="space-y-2">
+              <Label htmlFor="images">Image URLs (one per line)</Label>
+              <Textarea
+                id="images"
+                rows={6}
+                value={values.images.join("\n")}
+                onChange={(event) =>
+                  form.setValue(
+                    "images",
+                    event.target.value
+                      .split("\n")
+                      .map((entry) => entry.trim())
+                      .filter(Boolean),
+                    { shouldValidate: true }
+                  )
+                }
+              />
+              <p className="text-xs text-destructive">{form.formState.errors.images?.message}</p>
             </CardContent>
           </Card>
         )}
 
         {step === 5 && (
-          <Card className="border-primary/40">
+          <Card>
             <CardHeader>
-              <CardTitle>Ready to publish</CardTitle>
-              <CardDescription>Confirm the summary below, then publish.</CardDescription>
+              <CardTitle>Publish</CardTitle>
+              <CardDescription>Review your listing and publish it locally.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="rounded-2xl border border-border/60 bg-muted/40 p-4">
-                <p className="text-muted-foreground">{modeLabel} listing</p>
-                <p className="text-lg font-semibold">{values.title || "Untitled listing"}</p>
-                <p className="text-muted-foreground">
-                  {values.city || "City"}, {values.country || "Country"}
-                </p>
-                <p className="mt-2 text-base font-semibold text-primary">{pricePreview}</p>
-                <p className="mt-1 text-muted-foreground">
-                  {values.beds} beds · {values.baths} baths · {values.areaSqm} sqm
-                </p>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Publishing stores the listing locally via the <code>wp_listings_user</code> key. This is a mock workflow for the MVP.
+            <CardContent className="space-y-3 text-sm text-muted-foreground">
+              <p className="font-medium text-foreground">{values.title || "Add a title"}</p>
+              <p>
+                {values.city || "City"}, {values.country || "Country"}
               </p>
+              <p className="text-primary">{pricePreview}</p>
+              <p>Publishing stores this listing in LocalStorage for this device only.</p>
             </CardContent>
           </Card>
         )}
@@ -473,7 +399,7 @@ export function CreateListingWizard() {
             Back
           </Button>
           {step < steps.length - 1 ? (
-            <Button type="button" onClick={goNext} disabled={submitting}>
+            <Button type="button" onClick={goNext}>
               Continue
             </Button>
           ) : (

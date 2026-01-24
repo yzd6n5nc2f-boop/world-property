@@ -7,7 +7,7 @@ export function SiteFooter() {
         <p>© {new Date().getFullYear()} World Property. All rights reserved.</p>
         <div className="flex flex-wrap items-center gap-4">
           <Link href="/about">About</Link>
-          <Link href="/legal">Legal</Link>
+          <Link href="/legal">Buy Journey</Link>
           <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">
             Map data © OpenStreetMap contributors
           </a>

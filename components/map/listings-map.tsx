@@ -50,7 +50,7 @@ export function ListingsMap({ listings, selectedId, onSelect, onBoundsChange, on
         type: "Feature" as const,
         properties: {
           id: listing.id,
-          price: listing.price.salePrice ?? listing.price.rentPerMonth ?? listing.price.nightRate ?? 0,
+          price: listing.price.salePrice,
           currency: listing.currency
         },
         geometry: {
@@ -264,7 +264,7 @@ export function ListingsMap({ listings, selectedId, onSelect, onBoundsChange, on
             </p>
             <p className="text-base font-semibold text-primary">
               {formatCurrency(
-                selectedListing.price.salePrice ?? selectedListing.price.rentPerMonth ?? selectedListing.price.nightRate ?? 0,
+                selectedListing.price.salePrice,
                 selectedListing.currency
               )}
             </p>

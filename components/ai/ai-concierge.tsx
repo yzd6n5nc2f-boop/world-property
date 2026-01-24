@@ -10,9 +10,9 @@ import { getConciergeReply, type ConciergeMessage } from "@/lib/ai/concierge";
 import { cn } from "@/lib/utils/cn";
 
 const suggestions = [
-  "I want a 2-bed in Lisbon under £400k",
-  "Show me stylish rentals near the beach",
-  "Find stays in Tokyo for next month"
+  "I want a 3-bed in Lisbon under £450k",
+  "Show buyer-ready homes in Dubai Marina",
+  "What legal steps should I expect in Portugal?"
 ];
 
 export function AiConcierge() {
@@ -20,7 +20,7 @@ export function AiConcierge() {
   const [messages, setMessages] = useState<ConciergeMessage[]>([
     {
       role: "assistant",
-      content: "Hi! I'm your World Property concierge. Tell me what you're looking for."
+      content: "Hi! I’m your World Property concierge. Tell me where you want to buy and what clarity you need."
     }
   ]);
   const [draft, setDraft] = useState("");
@@ -69,7 +69,7 @@ export function AiConcierge() {
             <Bot className="h-5 w-5 text-primary" />
             AI Concierge
           </SheetTitle>
-          <SheetDescription>Get guided suggestions for buying, renting, or staying.</SheetDescription>
+          <SheetDescription>Get guided suggestions for buying globally with legal clarity.</SheetDescription>
         </SheetHeader>
 
         <div className="flex flex-wrap gap-2">
@@ -92,7 +92,7 @@ export function AiConcierge() {
             void sendMessage(draft.trim());
           }}
         >
-          <Input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Ask for a neighbourhood, budget, or vibe…" />
+          <Input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Ask about budget, legal steps, or currency clarity…" />
           <Button type="submit" size="icon" disabled={!canSend} aria-label="Send message">
             <SendHorizontal className="h-4 w-4" />
           </Button>

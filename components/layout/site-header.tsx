@@ -3,19 +3,47 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { useEffect } from "react";
-import { Globe2, Heart, Menu, UserCircle2 } from "lucide-react";
+import { Globe2, Heart, Menu, Scale, UserCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { useAuthStore } from "@/lib/stores/auth-store";
+import { usePreferencesStore } from "@/lib/stores/preferences-store";
+import { supportedCurrencies } from "@/lib/fx/mock-rates";
 import { cn } from "@/lib/utils/cn";
 
 const navLinks: Array<{ href: Route; label: string }> = [
-  { href: "/search?mode=buy" as Route, label: "Buy / Rent" },
-  { href: "/search?mode=stay" as Route, label: "Stay" },
-  { href: "/host", label: "Host / Agent" },
+  { href: "/search", label: "Search" },
+  { href: "/legal", label: "Buy Journey" },
+  { href: "/host", label: "List Property" },
   { href: "/saved", label: "Saved" }
 ];
+
+function CurrencySelector({ className }: { className?: string }) {
+  const { displayCurrency, hydrate, setDisplayCurrency } = usePreferencesStore();
+
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
+
+  return (
+    <div className={cn("min-w-[120px]", className)}>
+      <Select value={displayCurrency} onValueChange={setDisplayCurrency}>
+        <SelectTrigger className="h-9">
+          <SelectValue placeholder="Currency" />
+        </SelectTrigger>
+        <SelectContent>
+          {supportedCurrencies.map((currency) => (
+            <SelectItem key={currency} value={currency}>
+              {currency}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
 
 function NavItems({ className, onNavigate }: { className?: string; onNavigate?: () => void }) {
   return (
@@ -37,8 +65,8 @@ export function SiteHeader() {
   }, [hydrate]);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border/60 bg-background/90 backdrop-blur">
-      <div className="container flex h-16 items-center justify-between">
+    <header className="sticky top-0 z-30 border-b border-border/60 bg-background/95 backdrop-blur">
+      <div className="container flex h-16 items-center justify-between gap-3">
         <Link href="/" className="flex items-center gap-2 text-base font-semibold no-underline">
           <Globe2 className="h-5 w-5 text-primary" />
           World Property
@@ -46,7 +74,8 @@ export function SiteHeader() {
 
         <div className="hidden items-center gap-2 md:flex">
           <NavItems />
-          <Separator orientation="vertical" className="mx-2 h-6" />
+          <Separator orientation="vertical" className="mx-1 h-6" />
+          <CurrencySelector className="mr-1" />
           {user ? (
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">{user.name}</span>
@@ -74,15 +103,22 @@ export function SiteHeader() {
                   <Globe2 className="h-5 w-5 text-primary" />
                   World Property
                 </SheetTitle>
-                <SheetDescription>Live, invest, or stay anywhere.</SheetDescription>
+                <SheetDescription>Buy property anywhere with legal clarity.</SheetDescription>
               </SheetHeader>
-              <NavItems className="flex-col items-start" />
+              <CurrencySelector />
+              <NavItems className="flex-col items-start" onNavigate={() => undefined} />
               <Separator />
               <div className="flex flex-col gap-2">
                 <Button asChild variant="secondary" className="justify-start gap-2">
                   <Link href="/saved">
                     <Heart className="h-4 w-4" />
                     Saved
+                  </Link>
+                </Button>
+                <Button asChild variant="secondary" className="justify-start gap-2">
+                  <Link href="/legal">
+                    <Scale className="h-4 w-4" />
+                    Buy journey
                   </Link>
                 </Button>
                 {user ? (

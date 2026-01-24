@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, MapPinned } from "lucide-react";
-import type { ListingMode } from "@/types/listing";
 import { Button } from "@/components/ui/button";
 import { ListingsMap } from "@/components/map/listings-map";
 import { FiltersPanel } from "@/features/search/filters-panel";
@@ -13,11 +12,7 @@ import { useSavedStore } from "@/lib/stores/saved-store";
 import { useSearchStore } from "@/lib/stores/search-store";
 import { parseFilters, writeFiltersToParams } from "@/lib/utils/search-params";
 
-type SearchPageProps = {
-  initialMode: ListingMode;
-};
-
-export function SearchPage({ initialMode }: SearchPageProps) {
+export function SearchPage() {
   const router = useRouter();
   const params = useSearchParams();
   const paramsString = params.toString();
@@ -47,9 +42,10 @@ export function SearchPage({ initialMode }: SearchPageProps) {
   const updateUrl = useCallback(
     (snapshot: typeof filters) => {
       const nextParams = writeFiltersToParams(new URLSearchParams(paramsString), snapshot);
-      router.replace(`/search?${nextParams.toString()}`, { scroll: false });
+      const nextQuery = nextParams.toString();
+      router.replace(nextQuery ? `/search?${nextQuery}` : "/search", { scroll: false });
     },
-    [paramsString, router]
+    [filters, paramsString, router]
   );
 
   const runSearch = useCallback(async () => {
@@ -68,17 +64,15 @@ export function SearchPage({ initialMode }: SearchPageProps) {
 
   useEffect(() => {
     if (hasInitialised.current) return;
-    const modeFromParams = parsedParams.mode ?? initialMode;
-    resetFilters(modeFromParams);
-    setFilters({ ...parsedParams, mode: modeFromParams });
+    resetFilters();
+    setFilters(parsedParams);
     hasInitialised.current = true;
-  }, [initialMode, parsedParams, resetFilters, setFilters]);
+  }, [parsedParams, resetFilters, setFilters]);
 
   useEffect(() => {
     if (!hasInitialised.current) return;
-    const modeFromParams = parsedParams.mode ?? initialMode;
-    setFilters({ ...parsedParams, mode: modeFromParams });
-  }, [initialMode, parsedParams, setFilters]);
+    setFilters(parsedParams);
+  }, [parsedParams, setFilters]);
 
   useEffect(() => {
     if (!hasInitialised.current || !bounds) return;
@@ -87,17 +81,14 @@ export function SearchPage({ initialMode }: SearchPageProps) {
     });
   }, [bounds, runSearch, startTransition]);
 
-  const onModeChange = (mode: ListingMode) => {
-    resetFilters(mode);
+  const onReset = () => {
+    resetFilters();
     updateUrl({
-      mode,
       text: "",
       minPrice: undefined,
       maxPrice: undefined,
       minBeds: undefined,
-      propertyTypes: [],
-      startDate: undefined,
-      endDate: undefined
+      propertyTypes: []
     });
   };
 
@@ -107,8 +98,6 @@ export function SearchPage({ initialMode }: SearchPageProps) {
     maxPrice?: number;
     minBeds?: number;
     propertyTypes: typeof filters.propertyTypes;
-    startDate?: string;
-    endDate?: string;
   }) => {
     setFilters(next);
     updateUrl({ ...filters, ...next });
@@ -123,17 +112,13 @@ export function SearchPage({ initialMode }: SearchPageProps) {
     <div className="flex flex-col gap-5 lg:h-[calc(100vh-8rem)] lg:flex-row">
       <div className="flex w-full flex-col gap-5 lg:w-[420px]">
         <FiltersPanel
-          mode={filters.mode}
           text={filters.text}
           minPrice={filters.minPrice}
           maxPrice={filters.maxPrice}
           minBeds={filters.minBeds}
           propertyTypes={filters.propertyTypes}
-          startDate={filters.startDate}
-          endDate={filters.endDate}
-          onModeChange={onModeChange}
           onFiltersChange={onFiltersChange}
-          onReset={() => onModeChange(filters.mode)}
+          onReset={onReset}
           onSaveSearch={() => void storeSearch(toQuery())}
         />
         <ResultsPanel listings={results} selectedId={selectedId} onSelect={setSelectedId} />
@@ -162,7 +147,7 @@ export function SearchPage({ initialMode }: SearchPageProps) {
               <div>
                 <p className="text-sm font-semibold">Try expanding your search</p>
                 <p className="text-sm text-muted-foreground">Zoom out or reset filters to discover more locations.</p>
-                <Button variant="outline" size="sm" className="mt-2" onClick={() => onModeChange(filters.mode)}>
+                <Button variant="outline" size="sm" className="mt-2" onClick={onReset}>
                   Reset filters
                 </Button>
               </div>

@@ -1,17 +1,14 @@
 "use client";
 
 import { create } from "zustand";
-import type { Bounds, Listing, ListingMode, ListingQuery, PropertyType } from "@/types/listing";
+import type { Bounds, Listing, ListingQuery, PropertyType } from "@/types/listing";
 
 type Filters = {
-  mode: ListingMode;
   text: string;
   minPrice?: number;
   maxPrice?: number;
   minBeds?: number;
   propertyTypes: PropertyType[];
-  startDate?: string;
-  endDate?: string;
 };
 
 type SearchState = {
@@ -21,7 +18,7 @@ type SearchState = {
   selectedId?: string;
   isMapDirty: boolean;
   setFilters: (next: Partial<Filters>) => void;
-  resetFilters: (mode: ListingMode) => void;
+  resetFilters: () => void;
   setBounds: (bounds?: Bounds) => void;
   setResults: (results: Listing[]) => void;
   setSelectedId: (id?: string) => void;
@@ -29,19 +26,16 @@ type SearchState = {
   toQuery: () => ListingQuery;
 };
 
-const defaultFilters = (mode: ListingMode): Filters => ({
-  mode,
+const defaultFilters = (): Filters => ({
   text: "",
   minPrice: undefined,
   maxPrice: undefined,
   minBeds: undefined,
-  propertyTypes: [],
-  startDate: undefined,
-  endDate: undefined
+  propertyTypes: []
 });
 
 export const useSearchStore = create<SearchState>((set, get) => ({
-  filters: defaultFilters("buy"),
+  filters: defaultFilters(),
   bounds: undefined,
   results: [],
   selectedId: undefined,
@@ -50,9 +44,9 @@ export const useSearchStore = create<SearchState>((set, get) => ({
     set((state) => ({
       filters: { ...state.filters, ...next }
     })),
-  resetFilters: (mode) =>
+  resetFilters: () =>
     set({
-      filters: defaultFilters(mode),
+      filters: defaultFilters(),
       bounds: undefined,
       results: [],
       selectedId: undefined,
@@ -65,15 +59,12 @@ export const useSearchStore = create<SearchState>((set, get) => ({
   toQuery: () => {
     const { filters, bounds } = get();
     const query: ListingQuery = {
-      mode: filters.mode,
       text: filters.text || undefined,
       minPrice: filters.minPrice,
       maxPrice: filters.maxPrice,
       minBeds: filters.minBeds,
       propertyTypes: filters.propertyTypes.length ? filters.propertyTypes : undefined,
-      bounds,
-      startDate: filters.startDate,
-      endDate: filters.endDate
+      bounds
     };
     return query;
   }

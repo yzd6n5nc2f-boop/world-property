@@ -1,30 +1,29 @@
 @import "maplibre-gl/dist/maplibre-gl.css";
-@import "react-day-picker/dist/style.css";
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: 210 20% 98%;
-  --foreground: 222 47% 11%;
-  --muted: 210 16% 94%;
-  --muted-foreground: 215 16% 47%;
+  --background: 45 33% 98%;
+  --foreground: 220 49% 8%;
+  --muted: 50 18% 93%;
+  --muted-foreground: 217 11% 40%;
   --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
+  --popover-foreground: 220 49% 8%;
   --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
-  --border: 214 18% 86%;
-  --input: 214 18% 86%;
-  --primary: 222 89% 56%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96%;
-  --secondary-foreground: 222 47% 11%;
-  --accent: 217 92% 92%;
-  --accent-foreground: 222 47% 11%;
+  --card-foreground: 220 49% 8%;
+  --border: 45 19% 88%;
+  --input: 45 19% 88%;
+  --primary: 225 75% 48%;
+  --primary-foreground: 223 100% 99%;
+  --secondary: 222 100% 97%;
+  --secondary-foreground: 220 49% 8%;
+  --accent: 35 65% 90%;
+  --accent-foreground: 29 58% 10%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 210 40% 98%;
-  --ring: 222 89% 56%;
+  --ring: 225 75% 48%;
   --radius: 0.9rem;
 }
 
@@ -39,15 +38,4 @@ a {
 
 .maplibregl-ctrl-attrib {
   font-size: 11px;
-}
-
-.rdp {
-  --rdp-cell-size: 36px;
-  --rdp-accent-color: hsl(var(--primary));
-  --rdp-background-color: hsl(var(--accent));
-  margin: 1rem;
-}
-
-.rdp-caption_label {
-  font-weight: 600;
 }
