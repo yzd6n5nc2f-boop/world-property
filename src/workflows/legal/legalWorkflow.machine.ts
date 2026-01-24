@@ -4,7 +4,7 @@
  */
 
 import type { LegalWorkflowStage } from "@/src/domain/legal/legal.types";
-import type { LegalWorkflowEventStub } from "./legalWorkflow.events";
+import { LEGAL_WORKFLOW_EVENT_SEQUENCE, type LegalWorkflowEventStub } from "./legalWorkflow.events";
 
 export interface LegalWorkflowStateStub {
   caseId: string;
@@ -15,9 +15,16 @@ export const transitionLegalWorkflowStub = (
   state: LegalWorkflowStateStub,
   event: LegalWorkflowEventStub,
 ): LegalWorkflowStateStub => {
-  void event;
+  const currentIndex = LEGAL_WORKFLOW_EVENT_SEQUENCE.indexOf(state.stage);
+  const targetIndex = LEGAL_WORKFLOW_EVENT_SEQUENCE.indexOf(event.targetStage);
 
-  return {
-    ...state,
-  };
+  if (targetIndex === -1) return state;
+  if (targetIndex === currentIndex || targetIndex === currentIndex + 1) {
+    return {
+      ...state,
+      stage: event.targetStage,
+    };
+  }
+
+  return state;
 };

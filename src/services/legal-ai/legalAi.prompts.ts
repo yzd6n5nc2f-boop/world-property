@@ -14,7 +14,8 @@ export const buildLegalAiConsultationPrompts = (
   request: LegalAiConsultationRequestStub,
 ): LegalAiPromptBundle => {
   return {
-    system: "TODO: Define legal AI system prompt.",
-    user: `TODO: Define consultation prompt for case ${request.caseId}.`,
+    system:
+      "You are a legal workflow coordinator that summarizes readiness, collects missing documents, and flags risks. Keep responses structured, concise, and risk-aware.",
+    user: `Create a readiness summary for case ${request.caseId} in ${request.countryCode}. Current stage: ${request.stage}. Context: ${request.contextSummary}. Provide clarifying questions and the next recommended stage.`,
   };
 };

@@ -65,11 +65,16 @@ export function SiteHeader() {
   }, [hydrate]);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border/70 bg-background shadow-sm">
-      <div className="container flex h-[72px] items-center justify-between gap-4 py-3">
+    <header className="sticky top-0 z-30 border-b border-border/60 bg-background/95 backdrop-blur">
+      <div className="container flex h-[76px] items-center justify-between gap-4 py-3">
         <Link href="/" className="flex items-center gap-2 text-lg font-semibold tracking-tight no-underline">
-          <Globe2 className="h-5 w-5 text-primary" />
-          World Property
+          <span className="flex h-9 w-9 items-center justify-center rounded-full border border-primary/20 bg-primary/10">
+            <Globe2 className="h-5 w-5 text-primary" />
+          </span>
+          <span className="flex flex-col leading-tight">
+            <span>World Property</span>
+            <span className="text-xs font-medium text-muted-foreground">Investor-grade buying</span>
+          </span>
         </Link>
 
         <div className="hidden items-center gap-3 md:flex">
