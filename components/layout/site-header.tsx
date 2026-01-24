@@ -28,7 +28,7 @@ function CurrencySelector({ className }: { className?: string }) {
   }, [hydrate]);
 
   return (
-    <div className={cn("min-w-[120px]", className)}>
+    <div className={cn("min-w-[128px]", className)}>
       <Select value={displayCurrency} onValueChange={setDisplayCurrency}>
         <SelectTrigger className="h-9">
           <SelectValue placeholder="Currency" />
@@ -47,9 +47,9 @@ function CurrencySelector({ className }: { className?: string }) {
 
 function NavItems({ className, onNavigate }: { className?: string; onNavigate?: () => void }) {
   return (
-    <nav className={cn("flex items-center gap-1", className)}>
+    <nav className={cn("flex items-center gap-1.5", className)}>
       {navLinks.map((link) => (
-        <Button key={link.href} asChild variant="ghost" size="sm" onClick={onNavigate}>
+        <Button key={link.href} asChild variant="ghost" size="sm" className="px-3 text-sm" onClick={onNavigate}>
           <Link href={link.href}>{link.label}</Link>
         </Button>
       ))}
@@ -65,16 +65,16 @@ export function SiteHeader() {
   }, [hydrate]);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border/60 bg-background/95 backdrop-blur">
-      <div className="container flex h-16 items-center justify-between gap-3">
-        <Link href="/" className="flex items-center gap-2 text-base font-semibold no-underline">
+    <header className="sticky top-0 z-30 border-b border-border/70 bg-background shadow-sm">
+      <div className="container flex h-[72px] items-center justify-between gap-4 py-3">
+        <Link href="/" className="flex items-center gap-2 text-lg font-semibold tracking-tight no-underline">
           <Globe2 className="h-5 w-5 text-primary" />
           World Property
         </Link>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-3 md:flex">
           <NavItems />
-          <Separator orientation="vertical" className="mx-1 h-6" />
+          <Separator orientation="vertical" className="mx-1.5 h-6" />
           <CurrencySelector className="mr-1" />
           {user ? (
             <div className="flex items-center gap-2">
@@ -84,7 +84,7 @@ export function SiteHeader() {
               </Button>
             </div>
           ) : (
-            <Button asChild size="sm">
+            <Button asChild size="sm" className="px-4">
               <Link href="/auth">Sign in</Link>
             </Button>
           )}
