@@ -5,8 +5,8 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 
 export const metadata: Metadata = {
-  title: "World Property — Live, invest, or stay anywhere",
-  description: "A global, map-first property platform for buying, renting, and short stays."
+  title: "World Property — Buy property anywhere with legal clarity",
+  description: "A buyer-first, map-led platform for cross-border property purchases with legal workflow guidance and currency clarity."
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

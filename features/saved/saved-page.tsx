@@ -13,7 +13,7 @@ import { useSavedStore } from "@/lib/stores/saved-store";
 import { formatCurrency } from "@/lib/utils/format";
 
 function searchSummary(query: ListingQuery) {
-  const parts = [query.mode === "stay" ? "Stay" : "Buy / Rent"];
+  const parts = ["Buy search"];
   if (query.text) parts.push(`in ${query.text}`);
   if (query.minBeds) parts.push(`${query.minBeds}+ beds`);
   if (query.minPrice || query.maxPrice) {
@@ -58,7 +58,7 @@ export function SavedPage() {
               <HeartOff className="h-5 w-5 text-primary" />
               Nothing saved yet. Tap the heart on any listing to find it here.
               <Button asChild variant="outline" size="sm">
-                <Link href="/search?mode=buy">Browse listings</Link>
+                <Link href="/search">Browse listings</Link>
               </Button>
             </CardContent>
           </Card>
@@ -86,14 +86,14 @@ export function SavedPage() {
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
             {savedSearches.map((query, index) => (
-              <Card key={`${query.mode}-${index}`}>
+              <Card key={`buy-${index}`}>
                 <CardHeader>
-                  <CardTitle className="text-base">{query.mode === "stay" ? "Stay search" : "Buy / rent search"}</CardTitle>
+                  <CardTitle className="text-base">Buyer search</CardTitle>
                   <CardDescription>{searchSummary(query)}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button asChild variant="outline" size="sm">
-                    <Link href={`/search?mode=${query.mode}`}>Open search</Link>
+                    <Link href="/search">Open search</Link>
                   </Button>
                 </CardContent>
               </Card>

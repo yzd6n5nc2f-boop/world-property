@@ -4,10 +4,10 @@ export type ConciergeMessage = {
 };
 
 const cannedResponses = [
-  "I can help you compare buy vs stay opportunities in Lisbon, Dubai, and Cape Town.",
-  "Try zooming into your ideal neighbourhood, then tap ‘Search this area’ for a tighter match.",
-  "For stays, add your dates to see the nightly estimate and total trip cost.",
-  "Saved searches will notify you here once new listings match your criteria (coming soon)."
+  "I can help you compare buyer-ready opportunities across Lisbon, Dubai, and Cape Town with legal steps in mind.",
+  "Try zooming into your target neighbourhood, then tap ‘Search this area’ to focus on what you can actually buy there.",
+  "Switch your display currency in the header to sense-check pricing before you make an offer.",
+  "The Buy Journey page outlines the steps from offer to completion and what documents to request early."
 ];
 
 export async function getConciergeReply(history: ConciergeMessage[]) {

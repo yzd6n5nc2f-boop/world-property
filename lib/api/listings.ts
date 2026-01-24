@@ -1,5 +1,5 @@
 import { mockListings } from "@/data/mock-listings";
-import type { Bounds, Listing, ListingMode, ListingQuery, PropertyType } from "@/types/listing";
+import type { Bounds, Listing, ListingQuery, PropertyType } from "@/types/listing";
 import { readStorage, storageKeys, writeStorage } from "@/lib/utils/storage";
 
 const latency = 120;
@@ -35,7 +35,7 @@ function matchesBeds(listing: Listing, minBeds?: number) {
 }
 
 function listingPriceValue(listing: Listing) {
-  return listing.price.salePrice ?? listing.price.rentPerMonth ?? listing.price.nightRate ?? 0;
+  return listing.price.salePrice;
 }
 
 function matchesPrice(listing: Listing, minPrice?: number, maxPrice?: number) {
@@ -50,10 +50,6 @@ function matchesTypes(listing: Listing, propertyTypes?: PropertyType[]) {
   return propertyTypes.includes(listing.propertyType);
 }
 
-function matchesMode(listing: Listing, mode: ListingMode) {
-  return listing.mode === mode || (mode === "buy" && listing.mode === "rent");
-}
-
 function readUserListings() {
   return readStorage<Listing[]>(storageKeys.listings, []);
 }
@@ -63,7 +59,7 @@ export async function getAllListings() {
 }
 
 export async function listListings(query: ListingQuery) {
-  const listings = [...mockListings, ...readUserListings()].filter((listing) => matchesMode(listing, query.mode));
+  const listings = [...mockListings, ...readUserListings()];
 
   const filtered = listings.filter((listing) => {
     return (

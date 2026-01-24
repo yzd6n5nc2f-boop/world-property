@@ -8,8 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useSavedStore } from "@/lib/stores/saved-store";
+import { usePreferencesStore } from "@/lib/stores/preferences-store";
+import { convert, mockFxRates } from "@/lib/fx/mock-rates";
 import { cn } from "@/lib/utils/cn";
-import { formatArea, formatCurrency } from "@/lib/utils/format";
+import { formatArea, formatDualPrice } from "@/lib/utils/format";
 
 type ListingCardProps = {
   listing: Listing;
@@ -17,22 +19,14 @@ type ListingCardProps = {
   onHover?: (id?: string) => void;
 };
 
-function priceLabel(listing: Listing) {
-  if (listing.mode === "buy") {
-    return formatCurrency(listing.price.salePrice ?? 0, listing.currency);
-  }
-  if (listing.mode === "rent") {
-    return `${formatCurrency(listing.price.rentPerMonth ?? 0, listing.currency)} / month`;
-  }
-  return `${formatCurrency(listing.price.nightRate ?? 0, listing.currency)} / night`;
-}
-
 export function ListingCard({ listing, highlighted, onHover }: ListingCardProps) {
-  const { savedListingIds, hydrate, toggleListing } = useSavedStore();
+  const { savedListingIds, hydrate: hydrateSaved, toggleListing } = useSavedStore();
+  const { displayCurrency, showLocalCurrency, hydrate: hydratePreferences } = usePreferencesStore();
 
   useEffect(() => {
-    void hydrate();
-  }, [hydrate]);
+    void hydrateSaved();
+    hydratePreferences();
+  }, [hydratePreferences, hydrateSaved]);
 
   const isSaved = savedListingIds.includes(listing.id);
 
@@ -44,6 +38,15 @@ export function ListingCard({ listing, highlighted, onHover }: ListingCardProps)
         formatArea(listing.areaSqm)
       ].join(" · "),
     [listing.areaSqm, listing.baths, listing.beds]
+  );
+
+  const convertedValue = convert(listing.price.salePrice, listing.currency, displayCurrency, mockFxRates);
+  const dualPrice = formatDualPrice(
+    listing.price.salePrice,
+    listing.currency,
+    displayCurrency,
+    convertedValue,
+    showLocalCurrency
   );
 
   return (
@@ -58,8 +61,8 @@ export function ListingCard({ listing, highlighted, onHover }: ListingCardProps)
       <div className="relative h-44 w-full overflow-hidden">
         <img src={listing.images[0]} alt={listing.title} className="h-full w-full object-cover" loading="lazy" />
         <div className="absolute left-3 top-3 flex gap-2">
-          <Badge>{listing.mode.toUpperCase()}</Badge>
-          <Badge variant="secondary" className="bg-background/80 text-foreground">
+          <Badge className="bg-primary text-primary-foreground">BUY</Badge>
+          <Badge variant="secondary" className="bg-background/85 text-foreground">
             {listing.propertyType}
           </Badge>
         </div>
@@ -83,7 +86,10 @@ export function ListingCard({ listing, highlighted, onHover }: ListingCardProps)
               {listing.city}, {listing.country}
             </p>
           </div>
-          <p className="whitespace-nowrap text-base font-semibold text-primary">{priceLabel(listing)}</p>
+          <div className="text-right">
+            <p className="whitespace-nowrap text-base font-semibold text-primary">{dualPrice.local}</p>
+            {dualPrice.converted && <p className="text-xs text-muted-foreground">{dualPrice.converted}</p>}
+          </div>
         </div>
         <p className="text-sm text-muted-foreground">{meta}</p>
         <p className="line-clamp-2 text-sm text-muted-foreground">{listing.description}</p>

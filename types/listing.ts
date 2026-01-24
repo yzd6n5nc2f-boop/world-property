@@ -1,5 +1,3 @@
-export type ListingMode = "buy" | "rent" | "stay";
-
 export type PropertyType =
   | "apartment"
   | "house"
@@ -12,14 +10,11 @@ export type PropertyType =
 export type HostType = "agent" | "owner";
 
 export type ListingPrice = {
-  salePrice?: number;
-  rentPerMonth?: number;
-  nightRate?: number;
+  salePrice: number;
 };
 
 export interface Listing {
   id: string;
-  mode: ListingMode;
   title: string;
   description: string;
   country: string;
@@ -47,13 +42,10 @@ export type Bounds = {
 };
 
 export type ListingQuery = {
-  mode: ListingMode;
   text?: string;
   minPrice?: number;
   maxPrice?: number;
   minBeds?: number;
   propertyTypes?: PropertyType[];
   bounds?: Bounds;
-  startDate?: string;
-  endDate?: string;
 };

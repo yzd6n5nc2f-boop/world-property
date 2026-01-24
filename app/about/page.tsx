@@ -1,4 +1,4 @@
-import { Globe2, MapPinned, Rocket } from "lucide-react";
+import { Globe2, MapPinned, Scale } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function AboutRoute() {
@@ -6,7 +6,7 @@ export default function AboutRoute() {
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold tracking-tight">About World Property</h1>
-        <p className="text-muted-foreground">A global platform unifying property decisions across living, investing, and staying.</p>
+        <p className="text-muted-foreground">A buyer-first platform that brings legal clarity to global property decisions.</p>
       </header>
       <section className="grid gap-4 md:grid-cols-3">
         {[
@@ -16,14 +16,14 @@ export default function AboutRoute() {
             icon: MapPinned
           },
           {
-            title: "One platform, two modes",
-            text: "Buy and rent listings sit alongside short stays with shared filters and saves.",
-            icon: Globe2
+            title: "Legal journey guidance",
+            text: "Understand the steps, documents, and risks before you make an offer in any country.",
+            icon: Scale
           },
           {
-            title: "Launch-ready MVP",
-            text: "Designed to deploy fast on Azure Static Web Apps with local persistence.",
-            icon: Rocket
+            title: "Global coverage, local clarity",
+            text: "Compare local prices with familiar currency conversions without leaving the map.",
+            icon: Globe2
           }
         ].map((item) => {
           const Icon = item.icon;
@@ -45,8 +45,8 @@ export default function AboutRoute() {
           <CardTitle>Product principles</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
-          <p>• Clarity over clutter.</p>
-          <p>• Global coverage by default.</p>
+          <p>• Buyer confidence over browsing novelty.</p>
+          <p>• Legal clarity as a product surface, not a footer link.</p>
           <p>• MVP seams that scale into real services.</p>
         </CardContent>
       </Card>

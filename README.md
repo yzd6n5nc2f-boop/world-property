@@ -1,9 +1,6 @@
-# World Property — Azure-launchable map-first MVP
+# World Property — buyer-first global property MVP
 
-World Property is a global, map-based property platform that merges:
-
-- Rightmove-style buy / rent listings
-- Airbnb-style short-stay listings
+World Property is a global, map-based property platform focused on one outcome: buying property anywhere with legal clarity.
 
 This MVP is **front-end only**, uses **LocalStorage persistence**, and is designed to deploy quickly to **Azure Static Web Apps**.
 
@@ -18,11 +15,12 @@ This MVP is **front-end only**, uses **LocalStorage persistence**, and is design
 
 ## Key MVP features
 
-- Map-first search with clustering
-- Dual mode: Buy / Rent and Stay
-- Shareable search URLs via query params
-- Listing detail page
-- Host / Agent listing wizard (local persistence)
+- Map-first buyer search with clustering
+- Buyer-focused filters (price, beds, property type, text search)
+- Currency preference store with dual-price display (mock FX)
+- Listing detail experience with legal readiness scaffolding
+- Buy Journey page with country-specific checklist mock
+- Listing wizard for properties for sale (local persistence)
 - Saved listings and saved searches (local persistence)
 - Authentication UI shell (stub)
 - AI Concierge UX scaffold (stub)
@@ -107,6 +105,7 @@ This command:
 - `wp_saved_listings`
 - `wp_saved_searches`
 - `wp_auth_stub`
+- `wp_preferences`
 
 ## Useful scripts
 
