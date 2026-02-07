@@ -30,9 +30,9 @@ export default function AuthRoute() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <KeyRound className="h-5 w-5 text-primary" />
-            Authentication shell
+            Authentication
           </CardTitle>
-          <CardDescription>This MVP uses a local stub provider. No real authentication yet.</CardDescription>
+          <CardDescription>Sign in creates or updates your user profile in the backend database.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           {user ? (
@@ -63,7 +63,7 @@ export default function AuthRoute() {
           )}
           <Separator />
           <p className="text-xs text-muted-foreground">
-            The stub session is stored under the <code>wp_auth_stub</code> key in local storage.
+            Session state is cached locally in <code>wp_auth_stub</code> while account data is stored in SQLite.
           </p>
         </CardContent>
       </Card>
@@ -77,7 +77,7 @@ export default function AuthRoute() {
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <p>• Plug in Azure AD B2C, Auth0, or Supabase later.</p>
-          <p>• Replace the stub in <code>/lib/api/auth.ts</code> with real calls.</p>
+          <p>• Current implementation stores users in SQLite via <code>/api/auth/sign-in</code>.</p>
           <p>• The UI state already hydrates globally through the header.</p>
         </CardContent>
       </Card>

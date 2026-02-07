@@ -34,12 +34,20 @@ export const listingSchema = z.object({
   createdAt: z.string()
 });
 
+export const boundsSchema = z.object({
+  north: z.number(),
+  south: z.number(),
+  east: z.number(),
+  west: z.number()
+});
+
 export const searchFilterSchema = z.object({
   text: z.string().optional(),
   minPrice: z.number().nonnegative().optional(),
   maxPrice: z.number().nonnegative().optional(),
   minBeds: z.number().int().nonnegative().optional(),
-  propertyTypes: z.array(propertyTypeSchema).optional()
+  propertyTypes: z.array(propertyTypeSchema).optional(),
+  bounds: boundsSchema.optional()
 });
 
 export type ListingInput = z.infer<typeof listingSchema>;

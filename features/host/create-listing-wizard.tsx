@@ -86,6 +86,7 @@ export function CreateListingWizard() {
     }))
   );
   const [enhancing, setEnhancing] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
 
   const form = useForm<HostListingFormValues>({
     resolver: zodResolver(hostListingSchema),
@@ -124,11 +125,18 @@ export function CreateListingWizard() {
 
   const onPublish = form.handleSubmit(async (data) => {
     setSubmitting(true);
-    const listing = buildListing(data);
-    await createListing(listing);
-    setPublished(listing);
-    setSubmitting(false);
-    setStep(steps.length - 1);
+    setPublishError(null);
+
+    try {
+      const listing = buildListing(data);
+      await createListing(listing);
+      setPublished(listing);
+      setStep(steps.length - 1);
+    } catch (error) {
+      setPublishError(error instanceof Error ? error.message : "Unable to publish listing.");
+    } finally {
+      setSubmitting(false);
+    }
   });
 
   const handleCapture = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -485,7 +493,7 @@ export function CreateListingWizard() {
                 {values.city || "City"}, {values.country || "Country"}
               </p>
               <p className="text-primary">{pricePreview}</p>
-              <p>Publishing stores this listing in LocalStorage for this device only.</p>
+              <p>Publishing stores this listing in the platform database. Sign in first so uploads are linked to your account.</p>
             </CardContent>
           </Card>
         )}
@@ -504,6 +512,7 @@ export function CreateListingWizard() {
             </Button>
           )}
         </div>
+        {publishError && <p className="text-sm text-destructive">{publishError}</p>}
       </form>
     </div>
   );

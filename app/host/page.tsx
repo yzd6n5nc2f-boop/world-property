@@ -6,7 +6,7 @@ export default function HostRoute() {
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold tracking-tight">Create a listing</h1>
         <p className="text-muted-foreground">
-          This wizard publishes locally for the MVP. Listings appear in search results on this device.
+          Publish to the platform database so your listing appears in search for registered users.
         </p>
       </header>
       <CreateListingWizard />

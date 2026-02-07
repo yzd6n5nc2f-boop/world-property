@@ -43,7 +43,7 @@ export function SavedPage() {
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold tracking-tight">Saved items</h1>
-        <p className="text-muted-foreground">Your saved listings and searches live locally on this device.</p>
+        <p className="text-muted-foreground">Your saved listings and searches are stored in the backend for your account or device.</p>
       </header>
 
       <section className="space-y-4">

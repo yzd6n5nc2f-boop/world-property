@@ -2,7 +2,8 @@ export const storageKeys = {
   listings: "wp_listings_user",
   savedListings: "wp_saved_listings",
   savedSearches: "wp_saved_searches",
-  authStub: "wp_auth_stub"
+  authStub: "wp_auth_stub",
+  deviceId: "wp_device_id"
 } as const;
 
 function safeParse<T>(value: string | null, fallback: T): T {

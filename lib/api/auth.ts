@@ -1,3 +1,4 @@
+import { requestJson } from "@/lib/api/http";
 import { readStorage, storageKeys, writeStorage } from "@/lib/utils/storage";
 
 type AuthState = {
@@ -6,27 +7,24 @@ type AuthState = {
   lastLoginAt: string;
 };
 
-const latency = 120;
-
-function delay<T>(value: T) {
-  return new Promise<T>((resolve) => setTimeout(() => resolve(value), latency));
-}
-
 export async function getAuthState() {
-  return delay(readStorage<AuthState | null>(storageKeys.authStub, null));
+  return readStorage<AuthState | null>(storageKeys.authStub, null);
 }
 
 export async function signInStub(email: string, name: string) {
-  const state: AuthState = {
-    email,
-    name,
-    lastLoginAt: new Date().toISOString()
-  };
+  const state = await requestJson<AuthState>("/api/auth/sign-in", {
+    method: "POST",
+    body: JSON.stringify({ email, name, role: "user" })
+  });
+
   writeStorage(storageKeys.authStub, state);
-  return delay(state);
+  return state;
 }
 
 export async function signOutStub() {
+  await requestJson<{ ok: boolean }>("/api/auth/sign-out", {
+    method: "POST"
+  });
   writeStorage(storageKeys.authStub, null);
-  return delay(null);
+  return null;
 }

@@ -1,132 +1,88 @@
-# World Property — buyer-first global property MVP
+# World Property
 
-World Property is a global, map-based property platform focused on one outcome: buying property anywhere with legal clarity.
+World Property is a buyer-first, map-based property platform. The frontend UI remains intact and now runs with a lightweight SQLite backend.
 
-This MVP is **front-end only**, uses **LocalStorage persistence**, and is designed to deploy quickly to **Azure Static Web Apps**.
+## Features
 
-## Tech stack
-
-- Next.js 14 (App Router) + TypeScript
-- Tailwind CSS
-- shadcn/ui-style components (local)
-- MapLibre GL JS with OpenStreetMap tiles
-- Zod + React Hook Form
-- Zustand state management
-
-## Key MVP features
-
-- Map-first buyer search with clustering
+- Global buyer search with clustering
 - Buyer-focused filters (price, beds, property type, text search)
-- Currency preference store with dual-price display (mock FX)
-- Listing detail experience with legal readiness scaffolding
-- Buy Journey page with country-specific checklist mock
-- Listing wizard for properties for sale (local persistence)
-- Saved listings and saved searches (local persistence)
-- Authentication UI shell (stub)
-- AI Concierge UX scaffold (stub)
+- Listing detail pages
+- Host/agent listing wizard
+- Saved listings and saved searches
+- Authentication shell
 
-## Local development
+## Stack
 
-### 1) Install dependencies
+- Next.js 14 + TypeScript
+- Tailwind CSS
+- Zustand + React Hook Form + Zod
+- MapLibre GL JS
+- SQLite (`better-sqlite3`)
+
+## Backend architecture
+
+- Database file: `data/world-property.sqlite`
+- API routes: `app/api/**`
+- DB/service layer: `lib/server/db.ts`
+- Error helpers: `lib/server/http.ts`
+- Seed source: `data/mock-listings.ts`
+
+### Core API endpoints
+
+- `POST /api/auth/sign-in`
+- `POST /api/auth/sign-out`
+- `POST /api/users/register`
+- `POST /api/agents/register`
+- `GET /api/listings`
+- `POST /api/listings/search`
+- `GET /api/listings/:id`
+- `POST /api/listings` (requires registered user)
+- `GET|POST /api/saved/listings`
+- `GET|POST /api/saved/searches`
+- `GET /api/health`
+
+## Local setup
+
+1. Install dependencies
 
 ```bash
 npm install
 ```
 
-### 2) Run the dev server
+2. Start app (frontend + backend together)
 
 ```bash
 npm run dev
 ```
 
-Then open:
+3. Open
 
-- http://localhost:3000
+- `http://localhost:3000`
 
-### 3) Type-check (optional but recommended)
+## Full-stack test
 
-```bash
-npm run typecheck
-```
-
-### 4) Production build (static export)
+Run a one-command frontend + backend smoke test:
 
 ```bash
-npm run build
+npm run test:fullstack
 ```
 
-This generates a static export in the `out/` directory.
+This starts Next.js, executes the smoke test, and stops the server automatically.
 
-## Azure Static Web Apps deployment
-
-This project is configured for static export and Azure SWA-friendly routing.
-
-### Option A — Azure Static Web Apps (GitHub integration)
-
-1. Push this repository to GitHub.
-2. In the Azure Portal, create a **Static Web App**.
-3. Use these build settings:
-   - **Framework preset:** `Next.js`
-   - **App location:** `/`
-   - **Api location:** *(leave empty)*
-   - **Output location:** `out`
-4. Azure will run `npm install` and `npm run build` automatically.
-
-> Because this project uses `output: "export"`, the deployable artifacts live in `out/`.
-
-### Option B — SWA CLI local emulation
-
-Install the SWA CLI if you do not have it yet:
-
-```bash
-npm install -g @azure/static-web-apps-cli
-```
-
-Run the app with SWA CLI:
-
-```bash
-npm run swa:dev
-```
-
-This command:
-
-- starts Next.js locally
-- proxies it through the SWA CLI at a local URL
-
-## Notes on static export and listings
-
-- The `/listing/[id]` route is statically generated for seeded listings.
-- Listings created locally in `/host` are persisted and appear in search results, but their detail pages are not pre-rendered in a static export.
-- This is acceptable for the MVP and can be addressed later by introducing server rendering or an API.
-
-## LocalStorage keys used
-
-- `wp_listings_user`
-- `wp_saved_listings`
-- `wp_saved_searches`
-- `wp_auth_stub`
-- `wp_preferences`
+`test:smoke` is also available when you already have a server running and can provide `BASE_URL`.
 
 ## Useful scripts
 
 ```bash
-npm run dev        # Start Next.js dev server
-npm run build      # Static export build
-npm run start      # Starts Next.js server (non-static mode)
-npm run lint       # Next.js lint
-npm run typecheck  # TypeScript check
-npm run swa:dev    # SWA CLI local proxy + dev server
+npm run dev
+npm run build
+npm run typecheck
+npm run lint
+npm run test:smoke
+npm run test:fullstack
 ```
 
-## Project structure
+## Notes
 
-- `app/` — routes
-- `components/` — UI and shared components
-- `features/` — feature modules (search, listing, host, saved)
-- `lib/` — API stubs, schemas, stores, utils
-- `data/mock-listings.ts` — seeded global listings
-- `types/` — shared types
-
----
-
-This MVP is intentionally backend-free so it can launch quickly and be iterated on safely.
+- This app now requires server runtime support for API routes and SQLite.
+- Static export mode was removed.

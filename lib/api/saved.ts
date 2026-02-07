@@ -1,31 +1,31 @@
 import type { ListingQuery } from "@/types/listing";
-import { readStorage, storageKeys, writeStorage } from "@/lib/utils/storage";
-
-const latency = 80;
-
-function delay<T>(value: T, timeout = latency) {
-  return new Promise<T>((resolve) => setTimeout(() => resolve(value), timeout));
-}
+import { requestJson } from "@/lib/api/http";
+import { getSessionHeaders } from "@/lib/api/session";
 
 export async function getSavedListingIds() {
-  return delay(readStorage<string[]>(storageKeys.savedListings, []));
+  return requestJson<string[]>("/api/saved/listings", {
+    headers: getSessionHeaders()
+  });
 }
 
 export async function toggleSavedListing(id: string) {
-  const current = readStorage<string[]>(storageKeys.savedListings, []);
-  const exists = current.includes(id);
-  const next = exists ? current.filter((entry) => entry !== id) : [id, ...current];
-  writeStorage(storageKeys.savedListings, next);
-  return delay(next);
+  return requestJson<string[]>("/api/saved/listings", {
+    method: "POST",
+    headers: getSessionHeaders(),
+    body: JSON.stringify({ listingId: id })
+  });
 }
 
 export async function getSavedSearches() {
-  return delay(readStorage<ListingQuery[]>(storageKeys.savedSearches, []));
+  return requestJson<ListingQuery[]>("/api/saved/searches", {
+    headers: getSessionHeaders()
+  });
 }
 
 export async function saveSearch(query: ListingQuery) {
-  const current = readStorage<ListingQuery[]>(storageKeys.savedSearches, []);
-  const next = [query, ...current].slice(0, 20);
-  writeStorage(storageKeys.savedSearches, next);
-  return delay(next);
+  return requestJson<ListingQuery[]>("/api/saved/searches", {
+    method: "POST",
+    headers: getSessionHeaders(),
+    body: JSON.stringify({ query })
+  });
 }
