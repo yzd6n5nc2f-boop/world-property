@@ -71,6 +71,29 @@ This starts Next.js, executes the smoke test, and stops the server automatically
 
 `test:smoke` is also available when you already have a server running and can provide `BASE_URL`.
 
+## macOS app build (iMac/MacBook)
+
+Build a desktop `.app` and a shareable ZIP:
+
+```bash
+npm run desktop:dist
+```
+
+Artifacts:
+
+- `dist-desktop/mac-arm64/World Property.app`
+- `dist-desktop/World-Property-mac-arm64-unsigned.zip`
+
+Run the packaged app locally:
+
+1. Unzip `World-Property-mac-arm64-unsigned.zip`
+2. Move `World Property.app` to `Applications`
+3. First launch:
+   - Right click `World Property.app` -> `Open`
+   - Confirm the macOS security prompt
+
+Note: the package is unsigned (ad-hoc). This is expected for local distribution without an Apple Developer signing identity.
+
 ## Useful scripts
 
 ```bash
@@ -80,6 +103,8 @@ npm run typecheck
 npm run lint
 npm run test:smoke
 npm run test:fullstack
+npm run desktop:pack
+npm run desktop:dist
 ```
 
 ## Notes

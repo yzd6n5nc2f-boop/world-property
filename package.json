@@ -2,6 +2,7 @@
   "name": "world-property",
   "version": "0.1.0",
   "private": true,
+  "main": "desktop/main.cjs",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,7 +11,50 @@
     "typecheck": "tsc --noEmit",
     "test:smoke": "node scripts/smoke-test.mjs",
     "test:fullstack": "node scripts/fullstack-test.mjs",
+    "desktop:prep": "npm rebuild better-sqlite3",
+    "desktop:run": "npm run desktop:prep && npm run build && electron .",
+    "desktop:pack": "npm run desktop:prep && npm run build && CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --dir --mac -c.mac.sign=false -c.mac.identity=null -c.mac.hardenedRuntime=false -c.mac.gatekeeperAssess=false && npm run desktop:prep",
+    "desktop:dist": "npm run desktop:pack && cd dist-desktop/mac-arm64 && ditto -c -k --sequesterRsrc --keepParent \"World Property.app\" \"../World-Property-mac-arm64-unsigned.zip\"",
     "swa:dev": "swa start http://localhost:3000 --run \"npm run dev\" --app-port 3000"
+  },
+  "build": {
+    "appId": "com.worldproperty.desktop",
+    "productName": "World Property",
+    "afterPack": "desktop/after-pack.cjs",
+    "directories": {
+      "output": "dist-desktop"
+    },
+    "files": [
+      ".next/**/*",
+      "app/**/*",
+      "components/**/*",
+      "data/**/*",
+      "desktop/**/*",
+      "features/**/*",
+      "lib/**/*",
+      "scripts/**/*",
+      "src/**/*",
+      "types/**/*",
+      "next.config.mjs",
+      "package.json",
+      "package-lock.json",
+      ".env.example"
+    ],
+    "asarUnpack": [
+      "node_modules/better-sqlite3/**/*",
+      "node_modules/@next/swc-*/**/*",
+      "node_modules/lightningcss-*/**/*"
+    ],
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.business"
+    },
+    "dmg": {
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    }
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -46,7 +90,10 @@
     "@types/node": "^20.16.5",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
+    "@typescript-eslint/parser": "^8.54.0",
     "autoprefixer": "^10.4.20",
+    "electron": "^37.3.1",
+    "electron-builder": "^26.0.12",
     "eslint": "^8.57.0",
     "eslint-config-next": "14.2.5",
     "postcss": "^8.4.47",
